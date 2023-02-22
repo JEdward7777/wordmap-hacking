@@ -20,7 +20,7 @@ const currentDirectory: string = process.cwd();
 console.log('Current working directory:', currentDirectory);
 
 
-console.log( "starting" );
+console.log( "starting with node version: ", process.version );
 
 
 function parseTabSeparatedFile(filename: string): string[][] {
@@ -110,20 +110,25 @@ const target_sentence_tokens_array : Token[][] = common_keys.map( (key) => targe
 
 //now do the WordMap thingy.
 const map = new WordMap();
-for( let i = 0; i < source_sentence_tokens_array.length; ++i ){
-    if( target_sentence_tokens_array[i].length > 30 ){
-       console.log( "we have big" );
-    }
-    console.log( `going to work with tokens of length ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
+const chunk_size = 10;
+for( let i = 0; i < source_sentence_tokens_array.length; i+=chunk_size ){
+    console.log( `mapping sentance length of ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
+
+    const before_snap_shot = v8.getHeapStatistics().used_heap_size;
     //console.log( source_sentence_tokens_array[i] );
-    map.appendCorpusTokens( [source_sentence_tokens_array[i]], [target_sentence_tokens_array[i]] );
-    console.log( `appended tokens ${i} memory is ${v8.getHeapSnapshot()}` );
+    map.appendCorpusTokens( source_sentence_tokens_array.slice(i,Math.min(i+chunk_size,source_sentence_tokens_array.length)), 
+                            target_sentence_tokens_array.slice(i,Math.min(i+chunk_size,target_sentence_tokens_array.length)) );
+    
+
+    const after_snap_shot = v8.getHeapStatistics().used_heap_size;
+    console.log( `appended tokens ${i} memory is ${after_snap_shot}` );
     if( global.gc ){
         global.gc();
     }else{
         console.log( "no global.gc" );
     }
 }
+//map.appendCorpusTokens( source_sentence_tokens_array, target_sentence_tokens_array );
 
 
 
