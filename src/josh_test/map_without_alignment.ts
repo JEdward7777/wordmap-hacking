@@ -103,16 +103,16 @@ let common_keys = Array.from(source_sentence_tokens.keys()).filter(key => target
 
 
 //It wasn't working and I am thinking perhaps I am running out of memory so I will slice this.
-common_keys = common_keys.slice(0,common_keys.length/16);
+common_keys = common_keys.slice(0,common_keys.length*3/4);
 
 const source_sentence_tokens_array : Token[][] = common_keys.map( (key) => source_sentence_tokens.get(key) ) as Token[][]
 const target_sentence_tokens_array : Token[][] = common_keys.map( (key) => target_sentence_tokens.get(key) ) as Token[][]
 
 //now do the WordMap thingy.
 const map = new WordMap();
-const chunk_size = 10;
+const chunk_size = 1000;
 for( let i = 0; i < source_sentence_tokens_array.length; i+=chunk_size ){
-    console.log( `mapping sentance length of ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
+    console.log( `mapping sentence length of ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
 
     const before_snap_shot = v8.getHeapStatistics().used_heap_size;
     //console.log( source_sentence_tokens_array[i] );
