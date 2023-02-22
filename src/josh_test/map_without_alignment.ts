@@ -8,6 +8,8 @@ import Lexer,{Token} from "wordmap-lexer";
 
 import * as process from 'process';
 
+import v8 from 'v8';
+
 
 const source_tsv = "./src/josh_test/data/sources/NA27-YLT.tsv"
 const target_tsv = "./src/josh_test/data/targets/NA27-YLT.tsv"
@@ -89,8 +91,10 @@ const source_sentences = load_tsv_text2(source_tsv, true);
 const target_sentences = load_tsv_text2(target_tsv);
 
 //Now convert them into tokens.
-const source_sentence_tokens = new Map(Array.from( source_sentences, ([key,value]) => [key, Lexer.tokenizeWords(value)]));
-const target_sentence_tokens = new Map(Array.from( target_sentences, ([key,value]) => [key, Lexer.tokenizeWords(value)]));
+// const source_sentence_tokens_by_word = new Map(Array.from( source_sentences, ([key,value]) => [key, Lexer.tokenizeWords(value)]));
+// const target_sentence_tokens_by_word = new Map(Array.from( target_sentences, ([key,value]) => [key, Lexer.tokenizeWords(value)]));
+const source_sentence_tokens = new Map(Array.from( source_sentences, ([key,value]) => [key, Lexer.tokenize(value.join(' '))]));
+const target_sentence_tokens = new Map(Array.from( target_sentences, ([key,value]) => [key, Lexer.tokenize(value.join(' '))]));
 
 //Here I could inject the stringNumber and lemma and morph codes into the tokens.
 
@@ -113,7 +117,7 @@ for( let i = 0; i < source_sentence_tokens_array.length; ++i ){
     console.log( `going to work with tokens of length ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
     //console.log( source_sentence_tokens_array[i] );
     map.appendCorpusTokens( [source_sentence_tokens_array[i]], [target_sentence_tokens_array[i]] );
-    console.log( `appended tokens ${i}` );
+    console.log( `appended tokens ${i} memory is ${v8.getHeapSnapshot()}` );
     if( global.gc ){
         global.gc();
     }else{
