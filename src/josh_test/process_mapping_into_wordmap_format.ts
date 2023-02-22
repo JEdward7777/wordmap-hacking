@@ -70,7 +70,8 @@ function mapIdToOccurrenceNum( filename : string, use_lemma:boolean = false ){
             id_to_occurrence.set( this_word_id, {
                 text: this_word,
                 occurrence: occurrence,
-                occurrences: occurrences
+                occurrences: occurrences,
+                id: this_word_id
             })
         }
     }
@@ -103,7 +104,7 @@ for( let mapping_i = 0; mapping_i < mapping.length; ++mapping_i ){
 
     remapped.push({
         sourceNgram: sourceNgram,
-        targetNgram: targetNgram
+        targetNgram: targetNgram,
     })
 }
 

@@ -16,7 +16,38 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
-            "runtimeArgs": ["--expose-gc"]
+            "runtimeArgs": ["--expose-gc"],
+            //"runtimeVersion": "v19.7.0"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch process_mapping_into_wordmap_format.ts",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/josh_test/process_mapping_into_wordmap_format.ts",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "runtimeArgs": ["--expose-gc"],
+            //"runtimeVersion": "v19.7.0"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch dump_training_data.ts",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/josh_test/dump_training_data.ts",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "runtimeArgs": ["--expose-gc"],
+            //"runtimeVersion": "v19.7.0"
         }
     ]
 }
