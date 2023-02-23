@@ -48,6 +48,23 @@
             ],
             "runtimeArgs": ["--expose-gc"],
             //"runtimeVersion": "v19.7.0"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch map_with_catboost.ts",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/josh_test/map_with_catboost.ts",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ],
+            "runtimeArgs": ["--expose-gc"],
+            //"runtimeVersion": "v19.7.0"
         }
-    ]
+
+
+     ]
 }

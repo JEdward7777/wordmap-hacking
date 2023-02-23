@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@types/yargs": "^11.0.0",
+    "catboost": "^1.25.1",
     "yargs": "^11.0.0"
   },
   "peerDependencies": {

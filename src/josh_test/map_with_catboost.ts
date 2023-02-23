@@ -1,118 +1,91 @@
-import WordMap from "../";
-import {Suggestion, Engine} from "../";
-import * as fs from "fs-extra";
-
 import Lexer,{Token} from "wordmap-lexer";
+import * as fs from "fs-extra";
+import {Suggestion, Engine, Prediction} from "../";
+import WordMap from "../";
+import * as catboost from "catboost";
+import * as map_without_alignment from './map_without_alignment';
 
 
 
-import * as process from 'process';
-
-import v8 from 'v8';
-export const source_tsv = "./src/josh_test/data/sources/NA27-YLT.tsv";
-export const target_tsv = "./src/josh_test/data/targets/NA27-YLT.tsv";
-export const remapped_filename = "./src/josh_test/data/NA27-YLT-manual-Wordmap.json";
-const statistics_out_csv_filename = "map_without_alignment_stats.csv";
-export const ID_VERSE_START = 5;
-export const ID_VERSE_AFTER_END = 8;
-
-module.exports.bob = remapped_filename;
 
 
-function parseTabSeparatedFile(filename: string): string[][] {
-    const contents: string = fs.readFileSync(filename, "utf-8");
-    const rows: string[] = contents.trim().split("\n");
-    const parsed: string[][] = rows.map(row => row.split("\t"));
-    return parsed;
-}
+const statistics_out_csv_filename = "map_with_catboost_stats.csv";
+const catboost_save_filename = "src/josh_test/data/catboost_ephesians_train.cbm";
 
-function load_tsv_text( filename : string, use_lemma:boolean = false ){
-    const parsed_file = parseTabSeparatedFile( filename );
-
-
-    const id_index = parsed_file[0].indexOf( "identifier" );
-    const text_index = parsed_file[0].indexOf( use_lemma ? "lemma": "text" );
-
-    const sentences: string[][] = [];
+function catboost_score( map: WordMap, model: catboost.Model, predictions: Prediction[]): Prediction[] {
     
-    let active_verse = "";
+    for( let prediction_i = 0; prediction_i < predictions.length; ++prediction_i ){
+        const scores = predictions[prediction_i].getScores();
+        // const input_features = {
+        //     "f1:sourceCorpusPermutationsFrequencyRatio": scores.sourceCorpusPermutationsFrequencyRatio | 0,
+        //     "f2:targetCorpusPermutationsFrequencyRatio": scores.targetCorpusPermutationsFrequencyRatio | 0,
+        //     "f3:sourceAlignmentMemoryFrequencyRatio": scores.sourceAlignmentMemoryFrequencyRatio | 0,
+        //     "f4:targetAlignmentMemoryFrequencyRatio": scores.targetAlignmentMemoryFrequencyRatio | 0,
+        //     "f5:frequencyRatioCorpusFiltered": scores.frequencyRatioCorpusFiltered | 0,
+        //     "f6:frequencyRatioAlignmentMemoryFiltered": scores.frequencyRatioAlignmentMemoryFiltered | 0,
+        //     "f7:sourceCorpusLemmaPermutationsFrequencyRatio": scores.sourceCorpusLemmaPermutationsFrequencyRatio | 0,
+        //     "f8:targetCorpusLemmaPermutationsFrequencyRatio": scores.targetCorpusLemmaPermutationsFrequencyRatio | 0,
+        //     "f9:sourceAlignmentMemoryLemmaFrequencyRatio": scores.sourceAlignmentMemoryLemmaFrequencyRatio | 0,
+        //     "f10:targetAlignmentMemoryLemmaFrequencyRatio": scores.targetAlignmentMemoryLemmaFrequencyRatio | 0,
+        //     "f11:lemmaFrequencyRatioCorpusFiltered": scores.lemmaFrequencyRatioCorpusFiltered | 0,
+        //     "f12:lemmaFrequencyRatioAlignmentMemoryFiltered": scores.lemmaFrequencyRatioAlignmentMemoryFiltered | 0,
+        //     "f13:ngramRelativeTokenDistance": scores.ngramRelativeTokenDistance | 0,
+        //     "f14:alignmentRelativeOccurrence": scores.alignmentRelativeOccurrence | 0,
+        //     "f15:alignmentPosition": scores.alignmentPosition | 0,
+        //     "f16:phrasePlausibility": scores.phrasePlausibility | 0,
+        //     "f17:lemmaPhrasePlausibility": scores.lemmaPhrasePlausibility | 0,
+        //     "f18:ngramLength": scores.ngramLength | 0,
+        //     "f19:characterLength": scores.characterLength | 0,
+        //     "f20:alignmentOccurrences": scores.alignmentOccurrences | 0,
+        //     "f21:lemmaAlignmentOccurrences": scores.lemmaAlignmentOccurrences | 0,
+        //     "f22:uniqueness": scores.uniqueness | 0,
+        //     "f23:lemmaUniqueness": scores.lemmaUniqueness | 0,
+        // }
 
-    let current_sentence: string[] = [];
-    for( let row_i = 1; row_i < parsed_file.length; ++row_i ){
-        const current_verse = parsed_file[row_i][id_index].slice( ID_VERSE_START, ID_VERSE_AFTER_END );
-        if( current_verse != active_verse ){
-            current_sentence = [];
-            sentences.push( current_sentence );
-            active_verse = current_verse;
-        }
-        current_sentence.push( parsed_file[row_i][text_index] );
+        const input_features_array = [
+            scores.sourceCorpusPermutationsFrequencyRatio | 0,
+            scores.targetCorpusPermutationsFrequencyRatio | 0,
+            scores.sourceAlignmentMemoryFrequencyRatio | 0,
+            scores.targetAlignmentMemoryFrequencyRatio | 0,
+            scores.frequencyRatioCorpusFiltered | 0,
+            scores.frequencyRatioAlignmentMemoryFiltered | 0,
+            scores.sourceCorpusLemmaPermutationsFrequencyRatio | 0,
+            scores.targetCorpusLemmaPermutationsFrequencyRatio | 0,
+            scores.sourceAlignmentMemoryLemmaFrequencyRatio | 0,
+            scores.targetAlignmentMemoryLemmaFrequencyRatio | 0,
+            scores.lemmaFrequencyRatioCorpusFiltered | 0,
+            scores.lemmaFrequencyRatioAlignmentMemoryFiltered | 0,
+            scores.ngramRelativeTokenDistance | 0,
+            scores.alignmentRelativeOccurrence | 0,
+            scores.alignmentPosition | 0,
+            scores.phrasePlausibility | 0,
+            scores.lemmaPhrasePlausibility | 0,
+            scores.ngramLength | 0,
+            scores.characterLength | 0,
+            scores.alignmentOccurrences | 0,
+            scores.lemmaAlignmentOccurrences | 0,
+            scores.uniqueness | 0,
+            scores.lemmaUniqueness | 0,
+        ]
+        const empty_categorical_features = Array(input_features_array.length).fill(0);
+
+        const result = model.predict( [input_features_array], [empty_categorical_features] )[0];
+        
+        predictions[prediction_i].setScore("confidence", result);
     }
-
-    return sentences;
+    // const results = Engine.calculateConfidence(
+    //      predictions,
+    //      (map as any).engine.alignmentMemoryIndex
+    // );
+    return Engine.sortPredictions(predictions);
 }
 
-//This version doesn't just load all the verses into an array
-//but instead returns a dictionary.
-function load_tsv_text2( filename : string, use_lemma:boolean = false ){
-    const parsed_file = parseTabSeparatedFile( filename );
-
-
-    const id_index = parsed_file[0].indexOf( "identifier" );
-    const text_index = parsed_file[0].indexOf( use_lemma ? "lemma": "text" );
-
-    const sentences = new Map();
-    
-
-    for( let row_i = 1; row_i < parsed_file.length; ++row_i ){
-        const current_verse = parsed_file[row_i][id_index].slice( 0, ID_VERSE_AFTER_END );
-        if( !sentences.has(current_verse) ){
-            sentences.set( current_verse, [] );
-        }
-        const current_sentence = sentences.get( current_verse );
-        current_sentence.push( parsed_file[row_i][text_index] );
-    }
-
-    return sentences;
-}
-
-function word_map_predict_tokens( m: WordMap, from_tokens: Token[], to_tokens: Token[], maxSuggestions: number = 1, minConfidence: number = 0.1 ): Suggestion[]{
+function word_map_predict_tokens_catboost_style( m: WordMap, model : catboost.Model, from_tokens: Token[], to_tokens: Token[], maxSuggestions: number = 1, minConfidence: number = 0.0001 ): Suggestion[]{
     const engine_run = (m as any).engine.run( from_tokens, to_tokens );
-    const predictions = (m as any).engine.score( engine_run );
+    const predictions = catboost_score( m, model, engine_run );
     const suggestions = Engine.suggest(predictions, maxSuggestions, (m as any).forceOccurrenceOrder, minConfidence);
     return suggestions;
 }
-
-
-export function load_tokens_from_tsv( tsv_filename: string, use_lemma: boolean=false ){
-    const sentences = load_tsv_text2(tsv_filename, use_lemma);
-    //const sentence_tokens = new Map(Array.from( sentences, ([key,value]) => [key, Lexer.tokenizeWords(value)]));
-    const sentence_tokens = new Map(Array.from( sentences, ([key,value]) => [key, Lexer.tokenize(value.join(' '))]));
-    return sentence_tokens
-}
-
-export function load_corpus_into_wordmap( source_sentence_tokens_array: Token[][], target_sentence_tokens_array: Token[][] ){
-    const map = new WordMap();
-    const chunk_size = 1000;
-    for( let i = 0; i < source_sentence_tokens_array.length; i+=chunk_size ){
-        console.log( `mapping sentence length of ${source_sentence_tokens_array[i].length} to ${target_sentence_tokens_array[i].length}`);
-
-        const before_snap_shot = v8.getHeapStatistics().used_heap_size;
-        //console.log( source_sentence_tokens_array[i] );
-        map.appendCorpusTokens( source_sentence_tokens_array.slice(i,Math.min(i+chunk_size,source_sentence_tokens_array.length)), 
-                                target_sentence_tokens_array.slice(i,Math.min(i+chunk_size,target_sentence_tokens_array.length)) );
-        
-
-        const after_snap_shot = v8.getHeapStatistics().used_heap_size;
-        console.log( `appended tokens ${i} memory is ${after_snap_shot}` );
-        if( global.gc ){
-            global.gc();
-        }else{
-            console.log( "no global.gc" );
-        }
-    }
-    return map;
-}
-
 
 if (require.main === module) {
     const currentDirectory: string = process.cwd();
@@ -120,8 +93,8 @@ if (require.main === module) {
     console.log( "starting with node version: ", process.version );
     
     //load sentences and tokenize them.
-    const source_sentence_tokens = load_tokens_from_tsv(source_tsv, true);
-    const target_sentence_tokens = load_tokens_from_tsv(target_tsv);
+    const source_sentence_tokens = map_without_alignment.load_tokens_from_tsv(map_without_alignment.source_tsv, true);
+    const target_sentence_tokens = map_without_alignment.load_tokens_from_tsv(map_without_alignment.target_tsv);
 
     //Here I could inject the stringNumber and lemma and morph codes into the tokens.
 
@@ -136,16 +109,16 @@ if (require.main === module) {
     const target_sentence_tokens_array : Token[][] = common_keys.map( (key) => target_sentence_tokens.get(key) ) as Token[][]
 
     //now do the WordMap thingy.
-    const map = load_corpus_into_wordmap( source_sentence_tokens_array, target_sentence_tokens_array );
+    const map = map_without_alignment.load_corpus_into_wordmap( source_sentence_tokens_array, target_sentence_tokens_array );
 
 
     //load the manual mapping so we can score as we go along.
-    const all_manual_mappings = JSON.parse(fs.readFileSync(remapped_filename, 'utf-8') );
+    const all_manual_mappings = JSON.parse(fs.readFileSync(map_without_alignment.remapped_filename, 'utf-8') );
 
     //hash the manual mappings by verse_id so we can look them up.
     const hashed_manual_mappings = new Map();
     for( let mapping_i = 0; mapping_i < all_manual_mappings.length; ++mapping_i ){
-        const verse_id = all_manual_mappings[mapping_i].sourceNgram[0].id.slice(0,ID_VERSE_AFTER_END);
+        const verse_id = all_manual_mappings[mapping_i].sourceNgram[0].id.slice(0,map_without_alignment.ID_VERSE_AFTER_END);
         if( !hashed_manual_mappings.has(verse_id) ) hashed_manual_mappings.set( verse_id, [] );
         hashed_manual_mappings.get(verse_id).push( all_manual_mappings[mapping_i] );
     }
@@ -160,9 +133,13 @@ if (require.main === module) {
     //csv_out.write( "verse num,verse id,num_manual_mappings,num_suggested_mappings,num_correct_mappings\n" )
     fs.writeSync(csv_out_filehandle, "verse num,verse id,num_manual_mappings,num_suggested_mappings,num_correct_mappings\n" )
 
+    //load the catboost model
+    const model = new catboost.Model();
+    model.loadModel(catboost_save_filename);
+
     //let all_suggestions: Suggestion[][] = [];
     for( let sentence_i = 0; sentence_i < Math.min(source_sentence_tokens_array.length, output_limit); ++sentence_i){
-        const suggestions: Suggestion[] = word_map_predict_tokens( map, source_sentence_tokens_array[sentence_i], target_sentence_tokens_array[sentence_i] );
+        const suggestions: Suggestion[] = word_map_predict_tokens_catboost_style( map, model, source_sentence_tokens_array[sentence_i], target_sentence_tokens_array[sentence_i] );
         //all_suggestions.push( suggestions );
 
         const manual_mappings = hashed_manual_mappings.get( common_keys[sentence_i] );
