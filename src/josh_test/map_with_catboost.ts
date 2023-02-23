@@ -12,67 +12,48 @@ import * as map_without_alignment from './map_without_alignment';
 const statistics_out_csv_filename = "map_with_catboost_stats.csv";
 const catboost_save_filename = "src/josh_test/data/catboost_ephesians_train.cbm";
 
-function catboost_score( map: WordMap, model: catboost.Model, predictions: Prediction[]): Prediction[] {
-    
+
+export const catboostFeatureOrder : string[] = [
+    "sourceCorpusPermutationsFrequencyRatio",
+    "targetCorpusPermutationsFrequencyRatio",
+    "sourceAlignmentMemoryFrequencyRatio",
+    "targetAlignmentMemoryFrequencyRatio",
+    "frequencyRatioCorpusFiltered",
+    "frequencyRatioAlignmentMemoryFiltered",
+    "sourceCorpusLemmaPermutationsFrequencyRatio",
+    "targetCorpusLemmaPermutationsFrequencyRatio",
+    "sourceAlignmentMemoryLemmaFrequencyRatio",
+    "targetAlignmentMemoryLemmaFrequencyRatio",
+    "lemmaFrequencyRatioCorpusFiltered",
+    "lemmaFrequencyRatioAlignmentMemoryFiltered",
+    "ngramRelativeTokenDistance",
+    "alignmentRelativeOccurrence",
+    "alignmentPosition",
+    "phrasePlausibility",
+    "lemmaPhrasePlausibility",
+    "ngramLength",
+    "characterLength",
+    "alignmentOccurrences",
+    "lemmaAlignmentOccurrences",
+    "uniqueness",
+    "lemmaUniqueness",
+]
+
+export function scores_to_catboost_features( scores: {[key:string]:number} ){
+    const input_features_array = catboostFeatureOrder.map( (feature_name) => ( (scores[feature_name] === undefined)?0:scores[feature_name] ) );
+
+    const empty_categorical_features = Array(input_features_array.length).fill(0);
+
+    return [input_features_array,empty_categorical_features];
+}
+
+function catboost_score( map: WordMap, model: catboost.Model, predictions: Prediction[]): Prediction[] { 
     for( let prediction_i = 0; prediction_i < predictions.length; ++prediction_i ){
-        const scores = predictions[prediction_i].getScores();
-        // const input_features = {
-        //     "f1:sourceCorpusPermutationsFrequencyRatio": scores.sourceCorpusPermutationsFrequencyRatio | 0,
-        //     "f2:targetCorpusPermutationsFrequencyRatio": scores.targetCorpusPermutationsFrequencyRatio | 0,
-        //     "f3:sourceAlignmentMemoryFrequencyRatio": scores.sourceAlignmentMemoryFrequencyRatio | 0,
-        //     "f4:targetAlignmentMemoryFrequencyRatio": scores.targetAlignmentMemoryFrequencyRatio | 0,
-        //     "f5:frequencyRatioCorpusFiltered": scores.frequencyRatioCorpusFiltered | 0,
-        //     "f6:frequencyRatioAlignmentMemoryFiltered": scores.frequencyRatioAlignmentMemoryFiltered | 0,
-        //     "f7:sourceCorpusLemmaPermutationsFrequencyRatio": scores.sourceCorpusLemmaPermutationsFrequencyRatio | 0,
-        //     "f8:targetCorpusLemmaPermutationsFrequencyRatio": scores.targetCorpusLemmaPermutationsFrequencyRatio | 0,
-        //     "f9:sourceAlignmentMemoryLemmaFrequencyRatio": scores.sourceAlignmentMemoryLemmaFrequencyRatio | 0,
-        //     "f10:targetAlignmentMemoryLemmaFrequencyRatio": scores.targetAlignmentMemoryLemmaFrequencyRatio | 0,
-        //     "f11:lemmaFrequencyRatioCorpusFiltered": scores.lemmaFrequencyRatioCorpusFiltered | 0,
-        //     "f12:lemmaFrequencyRatioAlignmentMemoryFiltered": scores.lemmaFrequencyRatioAlignmentMemoryFiltered | 0,
-        //     "f13:ngramRelativeTokenDistance": scores.ngramRelativeTokenDistance | 0,
-        //     "f14:alignmentRelativeOccurrence": scores.alignmentRelativeOccurrence | 0,
-        //     "f15:alignmentPosition": scores.alignmentPosition | 0,
-        //     "f16:phrasePlausibility": scores.phrasePlausibility | 0,
-        //     "f17:lemmaPhrasePlausibility": scores.lemmaPhrasePlausibility | 0,
-        //     "f18:ngramLength": scores.ngramLength | 0,
-        //     "f19:characterLength": scores.characterLength | 0,
-        //     "f20:alignmentOccurrences": scores.alignmentOccurrences | 0,
-        //     "f21:lemmaAlignmentOccurrences": scores.lemmaAlignmentOccurrences | 0,
-        //     "f22:uniqueness": scores.uniqueness | 0,
-        //     "f23:lemmaUniqueness": scores.lemmaUniqueness | 0,
-        // }
-
-        const input_features_array = [
-            scores.sourceCorpusPermutationsFrequencyRatio | 0,
-            scores.targetCorpusPermutationsFrequencyRatio | 0,
-            scores.sourceAlignmentMemoryFrequencyRatio | 0,
-            scores.targetAlignmentMemoryFrequencyRatio | 0,
-            scores.frequencyRatioCorpusFiltered | 0,
-            scores.frequencyRatioAlignmentMemoryFiltered | 0,
-            scores.sourceCorpusLemmaPermutationsFrequencyRatio | 0,
-            scores.targetCorpusLemmaPermutationsFrequencyRatio | 0,
-            scores.sourceAlignmentMemoryLemmaFrequencyRatio | 0,
-            scores.targetAlignmentMemoryLemmaFrequencyRatio | 0,
-            scores.lemmaFrequencyRatioCorpusFiltered | 0,
-            scores.lemmaFrequencyRatioAlignmentMemoryFiltered | 0,
-            scores.ngramRelativeTokenDistance | 0,
-            scores.alignmentRelativeOccurrence | 0,
-            scores.alignmentPosition | 0,
-            scores.phrasePlausibility | 0,
-            scores.lemmaPhrasePlausibility | 0,
-            scores.ngramLength | 0,
-            scores.characterLength | 0,
-            scores.alignmentOccurrences | 0,
-            scores.lemmaAlignmentOccurrences | 0,
-            scores.uniqueness | 0,
-            scores.lemmaUniqueness | 0,
-        ]
-        const empty_categorical_features = Array(input_features_array.length).fill(0);
-
-        const result = model.predict( [input_features_array], [empty_categorical_features] )[0];
-        
-        predictions[prediction_i].setScore("confidence", result);
+        const [input_features_array,empty_categorical_features] = scores_to_catboost_features(predictions[prediction_i].getScores());
+        const confidence = model.predict( [input_features_array], [empty_categorical_features] )[0];
+        predictions[prediction_i].setScore("confidence", confidence);
     }
+    //This is how non-catboost confidence calculation is done:
     // const results = Engine.calculateConfidence(
     //      predictions,
     //      (map as any).engine.alignmentMemoryIndex
@@ -80,7 +61,7 @@ function catboost_score( map: WordMap, model: catboost.Model, predictions: Predi
     return Engine.sortPredictions(predictions);
 }
 
-function word_map_predict_tokens_catboost_style( m: WordMap, model : catboost.Model, from_tokens: Token[], to_tokens: Token[], maxSuggestions: number = 1, minConfidence: number = 0.0001 ): Suggestion[]{
+function word_map_predict_tokens_catboost_style( m: WordMap, model : catboost.Model, from_tokens: Token[], to_tokens: Token[], maxSuggestions: number = 1, minConfidence: number = 0.01 ): Suggestion[]{
     const engine_run = (m as any).engine.run( from_tokens, to_tokens );
     const predictions = catboost_score( m, model, engine_run );
     const suggestions = Engine.suggest(predictions, maxSuggestions, (m as any).forceOccurrenceOrder, minConfidence);
