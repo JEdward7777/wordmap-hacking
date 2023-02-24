@@ -30,21 +30,30 @@ if (require.main === module) {
     //Here I could inject the stringNumber and lemma and morph codes into the tokens.
 
     //figure out what sentence codes are common in both.
-    let common_keys = Array.from(source_sentence_tokens.keys()).filter(key => target_sentence_tokens.has(key));
+    const full_common_keys = Array.from(source_sentence_tokens.keys()).filter(key => target_sentence_tokens.has(key));
+    
+    let map : WordMap | undefined = undefined;
 
-    console.log( `Selecting 1/${VERSES_SELECTED_FOR_TRAINING_STRIDE}th of the original ${common_keys.length} verses.`);
+    {
+        const three_quarters_common_keys = full_common_keys.slice(0,full_common_keys.length*3/4);
+        const full_source_sentence_tokens_array : Token[][] = three_quarters_common_keys.map( (key) => source_sentence_tokens.get(key) ) as Token[][]
+        const full_target_sentence_tokens_array : Token[][] = three_quarters_common_keys.map( (key) => target_sentence_tokens.get(key) ) as Token[][]
+    
+        //now do the WordMap thingy.
+        map = map_without_alignment.load_corpus_into_wordmap( full_source_sentence_tokens_array, full_target_sentence_tokens_array );
+    }
+
+
+    console.log( `Selecting 1/${VERSES_SELECTED_FOR_TRAINING_STRIDE}th of the original ${full_common_keys.length} verses.`);
     //Here we will only keep every VERSES_SELECTED_FOR_TRAINING_STRIDE'th verse so that we are not training on everything.
-    common_keys = common_keys.filter((_,index) => (index+1)%VERSES_SELECTED_FOR_TRAINING_STRIDE === 0);
-    console.log( `This is ${common_keys.length}`);
+    const tenth_common_keys = full_common_keys.filter((_,index) => (index+1)%VERSES_SELECTED_FOR_TRAINING_STRIDE === 0);
+    console.log( `This is ${tenth_common_keys.length}`);
 
     // //It wasn't working and I am thinking perhaps I am running out of memory so I will slice this.
     // common_keys = common_keys.slice(0,common_keys.length*3/4);
 
-    const source_sentence_tokens_array : Token[][] = common_keys.map( (key) => source_sentence_tokens.get(key) ) as Token[][]
-    const target_sentence_tokens_array : Token[][] = common_keys.map( (key) => target_sentence_tokens.get(key) ) as Token[][]
-
-    //now do the WordMap thingy.
-    const map = map_without_alignment.load_corpus_into_wordmap( source_sentence_tokens_array, target_sentence_tokens_array );
+    const reduced_source_sentence_tokens_array : Token[][] = tenth_common_keys.map( (key) => source_sentence_tokens.get(key) ) as Token[][]
+    const reduced_target_sentence_tokens_array : Token[][] = tenth_common_keys.map( (key) => target_sentence_tokens.get(key) ) as Token[][]
 
 
     //load the manual mapping so we can score as we go along.
@@ -59,7 +68,7 @@ if (require.main === module) {
     }
 
     //const output_limit = 50;
-    const output_limit = source_sentence_tokens_array.length; //no limit.
+    const output_limit = reduced_source_sentence_tokens_array.length; //no limit.
 
     
     const train_out_filehandle = fs.openSync(catboost_train_data, 'w');
@@ -71,10 +80,10 @@ if (require.main === module) {
 
 
     //let all_suggestions: Suggestion[][] = [];
-    for( let sentence_i = 0; sentence_i < Math.min(source_sentence_tokens_array.length, output_limit); ++sentence_i){
-        const predictions = word_map_get_all_predictions( map, source_sentence_tokens_array[sentence_i], target_sentence_tokens_array[sentence_i] );
+    for( let sentence_i = 0; sentence_i < Math.min(reduced_source_sentence_tokens_array.length, output_limit); ++sentence_i){
+        const predictions = word_map_get_all_predictions( map, reduced_source_sentence_tokens_array[sentence_i], reduced_target_sentence_tokens_array[sentence_i] );
 
-        const manual_mappings = hashed_manual_mappings.get( common_keys[sentence_i] );
+        const manual_mappings = hashed_manual_mappings.get( tenth_common_keys[sentence_i] );
 
 
         let num_correct_mappings = 0;
@@ -129,7 +138,7 @@ if (require.main === module) {
             }
 
         }
-        console.log( `----${sentence_i},${common_keys[sentence_i]},${manual_mappings.length},${predictions.length},${num_correct_mappings}`)
+        console.log( `----${sentence_i},${tenth_common_keys[sentence_i]},${manual_mappings.length},${predictions.length},${num_correct_mappings}`)
 
         if( global.gc ){
             global.gc();

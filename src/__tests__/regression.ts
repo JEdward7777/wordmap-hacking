@@ -164,7 +164,7 @@ describe("Order of occurrence", () => {
             const tokens = tokenizeMockSentence(s);
             return new Ngram(tokens);
         });
-        const memory = [];
+        const memory : Alignment[] = [];
         for (let i = 0; i < sourceNgramMemory.length; i ++) {
             memory.push(new Alignment(sourceNgramMemory[i], targetNgramMemory[i]));
         }

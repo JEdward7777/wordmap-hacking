@@ -4,10 +4,17 @@ import * as fs from "fs-extra";
 //In this file we take the manual mapping which references the word numbers and convert it into the same 
 //datastructure type produced by wordmap.
 
-const source_tsv = "./src/josh_test/data/sources/NA27-YLT.tsv"
-const target_tsv = "./src/josh_test/data/targets/NA27-YLT.tsv"
-const in_mapping_filename = "./src/josh_test/data/NA27-YLT-manual.json"
-const out_mapping_filename = "./src/josh_test/data/NA27-YLT-manual-Wordmap.json"
+//Greek to English
+// const source_tsv = "./src/josh_test/data/sources/NA27-YLT.tsv"
+// const target_tsv = "./src/josh_test/data/targets/NA27-YLT.tsv"
+// const in_mapping_filename = "./src/josh_test/data/NA27-YLT-manual.json"
+// const out_mapping_filename = "./src/josh_test/data/NA27-YLT-manual-Wordmap.json"
+
+//Greek to Chinese
+const source_tsv = "./src/josh_test/data/sources/NA27-CUVMP.tsv"
+const target_tsv = "./src/josh_test/data/targets/NA27-CUVMP.tsv"
+const in_mapping_filename = "./src/josh_test/data/NA27-CUVMP-manual.json"
+const out_mapping_filename = "./src/josh_test/data/NA27-CUVMP-manual-Wordmap.json"
 
 function parseTabSeparatedFile(filename: string): string[][] {
     const contents: string = fs.readFileSync(filename, "utf-8");

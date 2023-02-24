@@ -9,8 +9,9 @@ import * as map_without_alignment from './map_without_alignment';
 
 
 
-const statistics_out_csv_filename = "map_with_catboost_stats.csv";
-const catboost_save_filename = "src/josh_test/data/catboost_ephesians_train.cbm";
+const statistics_out_csv_filename = "map_with_catboost_stats_chinese.csv";
+//const catboost_save_filename = "src/josh_test/data/catboost_ephesians_train.cbm";
+const catboost_save_filename = "tenth_of_nt_chinese.cbm";
 
 
 export const catboostFeatureOrder : string[] = [
