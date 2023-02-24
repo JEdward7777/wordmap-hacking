@@ -6,13 +6,13 @@ import * as catboost from "catboost";
 import * as map_without_alignment from './map_without_alignment';
 
 
+//Greek to English
+//const statistics_out_csv_filename = "./src/josh_test/results/map_with_catboost_stats_tenth_of_nt.csv";
+//const catboost_save_filename = "./src/josh_test/results/tenth_of_nt.cbm";
 
-
-
-const statistics_out_csv_filename = "map_with_catboost_stats_chinese.csv";
-//const catboost_save_filename = "src/josh_test/data/catboost_ephesians_train.cbm";
-const catboost_save_filename = "tenth_of_nt_chinese.cbm";
-
+//Greek to Chinese
+const statistics_out_csv_filename = "./src/josh_test/results/map_with_catboost_stats_chinese.csv";
+const catboost_save_filename = "./src/josh_test/results/tenth_of_nt_chinese.cbm";
 
 export const catboostFeatureOrder : string[] = [
     "sourceCorpusPermutationsFrequencyRatio",

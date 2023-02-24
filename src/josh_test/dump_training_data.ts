@@ -10,7 +10,8 @@ const MISS_INCLUSION = .1; //20%
 
 const VERSES_SELECTED_FOR_TRAINING_STRIDE = 10;
 
-const catboost_train_data = "dump_training_data_chinese.csv";
+//const catboost_train_data = "./src/josh_test/data/dump_training_data.csv";
+const catboost_train_data = "./src/josh_test/data/dump_training_data_chinese.csv";
 
 
 function word_map_get_all_predictions( m: WordMap, from_tokens: Token[], to_tokens: Token[] ): Prediction[]{

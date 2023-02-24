@@ -1,0 +1,8 @@
+| File Name | Purpose |
+|---|---|
+| data | This holds all the data such as mappings and text which is used to train and evaluate the approach. |
+| map_without_alignment.ts | This reads in the texts and alignment information and scores the results of wordmap using the provided alignment. It does not use catboost.  It also doesn't use alignments. |
+| results | This holds the trained catboost and xgboost models as well as the output statistics on running the methods on the data. |
+| dump_training_data.ts | The primary model, catboost, does not train in javascript and therefore the information needed for training needs to be dumped. This produces training files which are then loaded into the jupyter notebooks for creating the catboost and xgboost models. |
+| map_with_catboost.ts | This does the same thing as map_without_alignments.ts except that it uses the catboost model to convert the wordmap heristics into confidence scores.  The output of this are statistics which are written to the results folder. |
+| process_mapping_into_wordmap_format.ts | The provided wordmapping files in the data subfolder were indexed directly to the word id of the incoming text which was not useful for determining if wordmap produced a valid mapping or not.  Therefore this processes through that file type and converts it into a alignment format which specifies the actual word, how many of those words are in the sentence and which of that number is the indicated word. |

@@ -15,7 +15,7 @@ import v8 from 'v8';
 // export const source_lang = "na27";
 // export const target_lang = "ylt";
 // export const remapped_filename = "./src/josh_test/data/NA27-YLT-manual-Wordmap.json";
-//const statistics_out_csv_filename = "map_without_alignment_stats.csv";
+//const statistics_out_csv_filename = "./src/josh_test/results/map_without_alignment_stats.csv";
 
 // Greek to Chinese.
 export const source_tsv = "./src/josh_test/data/sources/NA27-CUVMP.tsv";
@@ -23,7 +23,7 @@ export const target_tsv = "./src/josh_test/data/targets/NA27-CUVMP.tsv";
 export const source_lang = "na27";
 export const target_lang = "cuvmp";
 export const remapped_filename = "./src/josh_test/data/NA27-CUVMP-manual-Wordmap.json";
-const statistics_out_csv_filename = "map_without_alignment_stats_chinese.csv";
+const statistics_out_csv_filename = "./src/josh_test/results/map_without_alignment_stats_chinese.csv";
 
 export const ID_VERSE_START = 5;
 export const ID_VERSE_AFTER_END = 8;
