@@ -1,4 +1,5 @@
 | File Name | Purpose |
+| --- | --- |
 | dump_training_data_chinese.csv | This is a dump of data for training catboost (or xgboost) in a jupyter notebook.  This one is from greek to Chinese. |
 | NA27-CUVMP-manual-Wordmap.json | This is a wordmap from Greek lemmas to Chinese in a format which can be compared with Wordmap. |
 | NA27-YLT-manual-Wordmap.json | This is the same thing as NA27-CUVMP-manual-Wordmap.json but Greek lemmas to English (YLT) instead. |
